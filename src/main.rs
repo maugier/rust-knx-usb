@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use libusb::{Context, Device};
 use anyhow::{anyhow, Result};
 
@@ -61,6 +63,17 @@ struct KNX<'a> {
     dev: Device<'a>,
     input: u8,
     output: u8,
+}
+
+impl Debug for KNX {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let dev = format!("<device {}:{}>", self.dev.bus_number(), self.dev.address());
+        f.debug_struct("KNX")
+            .field("dev", &dev)
+            .field("input", &self.input)
+            .field("output", &self.output)
+            .finish()
+    }
 }
 
 fn main() -> Result<()> {
