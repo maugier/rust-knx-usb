@@ -67,7 +67,7 @@ struct KNX<'a> {
     output: u8,
 }
 
-impl Debug for KNX {
+impl<'a> Debug for KNX<'a> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let dev = format!("<device {}:{}>", self.dev.bus_number(), self.dev.address());
         f.debug_struct("KNX")
@@ -87,7 +87,7 @@ fn main() -> Result<()> {
     }
 
     let knx = ctx.knx()?;
-    let dev = knx.dev.open()?;
+    let mut dev = knx.dev.open()?;
 
     if dev.kernel_driver_active(knx.iface)? {
         dev.detach_kernel_driver(knx.iface)?;
