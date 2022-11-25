@@ -1,4 +1,4 @@
-use std::fmt::Debug;
+use std::{fmt::Debug, time::Duration};
 
 use libusb::{Context, Device};
 use anyhow::{anyhow, Result};
@@ -42,8 +42,9 @@ impl KNXContext for Context {
 
         let input = input.ok_or(anyhow!("no IN endpoint"))?;
         let output = output.ok_or(anyhow!("no OUT endpoint"))?;
+        let iface = iface.number();
 
-        Ok(KNX { dev, input, output })
+        Ok(KNX { dev, input, output, iface })
 
     }
 
@@ -61,6 +62,7 @@ impl KNXContext for Context {
 
 struct KNX<'a> {
     dev: Device<'a>,
+    iface: u8,
     input: u8,
     output: u8,
 }
@@ -85,6 +87,21 @@ fn main() -> Result<()> {
     }
 
     let knx = ctx.knx()?;
+    let dev = knx.dev.open()?;
+
+    if dev.kernel_driver_active(knx.iface)? {
+        dev.detach_kernel_driver(knx.iface)?;
+    }
+    dev.claim_interface(knx.iface)?;
+
+
+    let mut buf = [0; 64];
+
+    loop {
+        
+        let size = dev.read_interrupt(knx.input, &mut buf, Duration::from_millis(1000))?;
+        println!("{:?}", &buf[..size]);
+    }
 
 
     
