@@ -109,7 +109,7 @@ fn main() -> Result<()> {
             match dev.read_interrupt(knx.input, &mut buf, Duration::from_millis(1000)) {
                 Ok(size) => break size,
                 Err(Error::Timeout) => continue,
-                Err(e) => return Err(e),
+                Err(e) => return Err(e.into()),
             }
         };
         println!("{:?}", &buf[..size]);
