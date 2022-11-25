@@ -88,24 +88,27 @@ fn main() -> Result<()> {
 
     let knx = ctx.knx()?;
     let mut dev = knx.dev.open()?;
+    eprintln!("Dev open");
 
     if dev.kernel_driver_active(knx.iface)? {
         dev.detach_kernel_driver(knx.iface)?;
     }
-    dev.claim_interface(knx.iface)?;
+
+    if let Err(e) = dev.claim_interface(knx.iface) {
+        eprintln!("Claim error: {:?}", e);
+        return Err(e.into());
+    }
+    eprintln!("Claim ok");
 
 
-    let mut buf = [0; 64];
+    let mut buf = [0; 512];
+    eprintln!("entering loop, input channel {}", knx.input);
 
     loop {
-        
         let size = dev.read_interrupt(knx.input, &mut buf, Duration::from_millis(1000))?;
         println!("{:?}", &buf[..size]);
     }
 
-
-    
-    Ok(())
 }
 
 
