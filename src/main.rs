@@ -1,6 +1,6 @@
 use std::{fmt::Debug, time::Duration};
 
-use libusb::{Context, Device};
+use libusb::{Context, Device,Error};
 use anyhow::{anyhow, Result};
 
 trait KNXContext {
@@ -105,7 +105,13 @@ fn main() -> Result<()> {
     eprintln!("entering loop, input channel {}", knx.input);
 
     loop {
-        let size = dev.read_interrupt(knx.input, &mut buf, Duration::from_millis(1000))?;
+        let size = loop {    
+            match dev.read_interrupt(knx.input, &mut buf, Duration::from_millis(1000)) {
+                Ok(size) => break size,
+                Err(Error::Timeout) => continue,
+                Err(e) => return Err(e),
+            }
+        };
         println!("{:?}", &buf[..size]);
     }
 
